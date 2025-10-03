@@ -1,7 +1,7 @@
 # Ignore les fichiers d'environnement locaux
 .env
 .env.*
-!env.example
+!.env.example
 
 # Ignore les fichiers Node
 node_modules/

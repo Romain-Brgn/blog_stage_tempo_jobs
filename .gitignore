@@ -1,0 +1,10 @@
+# Ignore les fichiers d'environnement locaux
+.env
+.env.*
+!env.example
+
+# Ignore les fichiers Node
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log

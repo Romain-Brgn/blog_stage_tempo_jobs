@@ -1,0 +1,31 @@
+Dans terminal PowerShell vscode 
+
+& "C:\wamp64\bin\mysql\mysql9.1.0\bin\mysql.exe" -u root -p
+
+si erreur vérifier version MySQL dans l'explorateur de fichier, ou vérifier le chemin (par défaut c'est celui ci)
+taper votre mot de passe si vous en avez un
+
+votre terminal bascule en MySQL et plus powershell
+vérifier que vous etes bien connecté avec root
+
+mysql> SELECT CURRENT_USER(), USER();
+
+puis créer la db ainsi que votre compte (remplacer prénom par votre prénom 4 fois, et le mot de passe)
+
+CREATE DATABASE IF NOT EXISTS `stage_blog_prenom` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+CREATE USER IF NOT EXISTS 'app_admin_prenom'@'localhost' IDENTIFIED BY 'ChangeMe!2025';
+GRANT ALL PRIVILEGES ON `stage_blog`.* TO 'app_admin_prenom'@'localhost';
+FLUSH PRIVILEGES;
+SHOW GRANTS FOR 'app_admin_prenom'@'localhost';
+
+vérifier que le grant a fonctionné
+déconnecté vous de root avec :
+\q
+
+vous etes repassé en PowerShell, reconnectez vous avec le nouveau user que vous venez de créer (remplacer prenom) :
+
+& "C:\wamp64\bin\mysql\mysql9.1.0\bin\mysql.exe" -u app_admin_prenom -p
+
+tapez votre mot de passe que vous venez de créer au dessus
+
+vous etes connecté avec app_admin_medina ou vincent

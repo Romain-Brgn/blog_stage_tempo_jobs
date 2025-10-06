@@ -1,8 +1,10 @@
-const express = require("express");
 const path = require("path");
+const express = require("express");
+require("dotenv").config({ path: path.resolve(__dirname, ".env.local") });
+
 // const session = require("express-session");
 // const cors = require("cors");
-require("dotenv").config();
+
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -18,8 +20,10 @@ app.use(express.static(path.join(__dirname, "/src/Public")));
 
 const routeAdmin = require("./src/Route/admin.route");
 const routePublic = require("./src/Route/public.route");
+const routeAuth = require("./src/Route/auth.route");
 
 app.use("/admin", routeAdmin);
+app.use("/auth", routeAuth);
 // app.use("/", routePublic);
 
 // -------------- //

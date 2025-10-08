@@ -1,19 +1,3 @@
-// const mysql = require("mysql2/promise");
-
-// const pool = mysql.createPool({
-//   host: process.DB_HOST,
-//   user: process.DB_USER,
-//   password: process.DB_PASSWORD,
-//   database: process.DB_NAME,
-//   port: process.DB_PORT || 3306,
-//   waitForConnections: true,
-//   connectionLimit: 10,
-//   namedPlaceholders: true,
-// });
-
-// module.exports = pool;
-
-// src/db.js
 const mysql = require("mysql2/promise");
 const path = require("path");
 

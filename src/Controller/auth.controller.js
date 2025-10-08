@@ -19,7 +19,7 @@ module.exports = {
 
       // IDs référentiels
       const roleId = await UserRepository.getRoleIdByName("user"); // seeds -> id = 2
-      const statusId = await UserRepository.getStatusIdByName(status); // par nom, issu du body
+      const statusId = await UserRepository.getStatusIdByName(status); // par nom, issu du body JSON saisie par le client
 
       if (!roleId || !statusId) {
         return res

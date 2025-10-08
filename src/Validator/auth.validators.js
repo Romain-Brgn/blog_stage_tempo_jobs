@@ -1,19 +1,43 @@
 const { body, validationResult } = require("express-validator");
+const C = require("../Config/constraints");
 
 const registerValidators = [
-  body("email").isEmail().withMessage("Email invalide").normalizeEmail(),
+  body("email")
+    .trim()
+    .notEmpty()
+    .withMessage("Email requis")
+    .bail()
+    .isEmail()
+    .withMessage("Email invalide")
+    .bail()
+    .isLength({ max: C.email.max })
+    .withMessage(`Email max ${C.email.max} caractères`)
+    .bail()
+    .normalizeEmail({
+      // explicite la normalisation
+      all_lowercase: true, // baisse tout (local + domaine) => cohérent pour l’unicité
+      gmail_remove_dots: false, // évite les surprises “janedoe” == “jane.doe”
+      gmail_remove_subaddress: false,
+    }),
+
   body("pseudonyme")
     .trim()
-    .isLength({ min: 3, max: 50 })
-    .withMessage("Pseudonyme 3-50 caractères")
+    .isLength({ min: C.pseudonyme.min, max: C.pseudonyme.max })
+    .withMessage(
+      `Pseudonyme ${C.pseudonyme.min}-${C.pseudonyme.max} caractères`
+    )
+    .bail()
     .matches(/^[a-zA-Z0-9_.-]+$/)
     .withMessage("Caractères autorisés: lettres, chiffres, _ . -"),
+
   body("password")
-    .isLength({ min: 8 })
-    .withMessage("Mot de passe min 8 caractères"),
+    .isLength({ min: C.password.min })
+    .withMessage(`Mot de passe min ${C.password.min} caractères`),
+
   body("status")
-    .isIn(["professionnel", "candidat", "curieux"])
-    .withMessage("status doit être: professionnel | candidat | curieux"),
+    .isIn(C.statusAllowed)
+    .withMessage(`status doit être: ${C.statusAllowed.join(" ; ")}`),
+
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty())

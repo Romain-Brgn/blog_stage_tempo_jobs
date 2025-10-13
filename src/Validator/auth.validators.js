@@ -46,4 +46,20 @@ const registerValidators = [
   },
 ];
 
-module.exports = { registerValidators };
+const tokenValidator = [
+  body("token")
+    .trim()
+    .bail()
+    .isString()
+    .withMessage("Token invalide")
+    .notEmpty(),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    next();
+  },
+];
+
+module.exports = { registerValidators, tokenValidator };

@@ -95,6 +95,7 @@ CREATE TABLE IF NOT EXISTS users (
   url_profil_picture VARCHAR(255) NULL,
   pseudonyme        VARCHAR(50)   NULL,
   confirm_token     VARCHAR(255)  NOT NULL,
+  confirm_token_expires_at      DATETIME      NULL,
   confirmed_at      DATETIME      NULL,
   PRIMARY KEY (id),
   UNIQUE KEY uq_users_email (email),
@@ -102,6 +103,8 @@ CREATE TABLE IF NOT EXISTS users (
   KEY ix_users_role_id (role_id),
   KEY ix_users_status_id (status_id),
   KEY ix_users_list_diffusion_id (list_diffusion_id),
+  KEY ix_users_confirm_token_expires_at (confirm_token_expires_at),
+  KEY ix_users_confirm_token (confirm_token),
   CONSTRAINT fk_users_role
     FOREIGN KEY (role_id) REFERENCES role_users(id)
     ON UPDATE CASCADE ON DELETE RESTRICT,

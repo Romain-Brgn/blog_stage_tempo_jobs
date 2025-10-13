@@ -6,9 +6,9 @@
   "scripts": {
     "start": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "migrate:baseline": "dotenv -e .env.local -- powershell -NoProfile -ExecutionPolicy Bypass -Command \"Get-Content './scripts/baseline.sql' | & 'C:\\wamp64\\bin\\mysql\\mysql9.1.0\\bin\\mysql.exe' -u $env:DB_USER --password=$env:DB_PASSWORD --host=$env:DB_HOST --port=$env:DB_PORT --database=$env:DB_NAME\"",
-    "migrate:migrations": "dotenv -e .env.local -- powershell -NoProfile -ExecutionPolicy Bypass -Command \"Get-ChildItem -Path './scripts/migrations' -Filter *.sql | Sort-Object Name | ForEach-Object { Get-Content $_.FullName | & 'C:\\wamp64\\bin\\mysql\\mysql9.1.0\\bin\\mysql.exe' -u $env:DB_USER --password=$env:DB_PASSWORD --host=$env:DB_HOST --port=$env:DB_PORT --database=$env:DB_NAME }\"",
-    "migrate": "npm run migrate:baseline && npm run migrate:migrations"
+    "migrate:baseline:if-empty": "dotenv -e .env.local -- powershell -NoProfile -ExecutionPolicy Bypass -Command \"$exists = & 'C:\\wamp64\\bin\\mysql\\mysql9.1.0\\bin\\mysql.exe' -N -B -u $env:DB_USER --password=$env:DB_PASSWORD --host=$env:DB_HOST --port=$env:DB_PORT --database=$env:DB_NAME -e \\\"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='$env:DB_NAME' AND table_name='users'\\\"; if ([int]$exists -eq 0) { Get-Content './scripts/baseline.sql' | & 'C:\\wamp64\\bin\\mysql\\mysql9.1.0\\bin\\mysql.exe' -u $env:DB_USER --password=$env:DB_PASSWORD --host=$env:DB_HOST --port=$env:DB_PORT --database=$env:DB_NAME } else { Write-Host 'Baseline skipped (users table already exists)'; }\"",
+    "migrate:migrations": "dotenv -e .env.local -- powershell -NoProfile -ExecutionPolicy Bypass -Command \"Get-ChildItem -Path './scripts/migrations' -Filter *.sql | Sort-Object Name | ForEach-Object { Write-Host 'Running migration:' $_.Name; Get-Content $_.FullName | & 'C:\\wamp64\\bin\\mysql\\mysql9.1.0\\bin\\mysql.exe' -u $env:DB_USER --password=$env:DB_PASSWORD --host=$env:DB_HOST --port=$env:DB_PORT --database=$env:DB_NAME }\"",
+    "migrate": "npm run migrate:baseline:if-empty && npm run migrate:migrations"
   },
   "author": "",
   "license": "ISC",

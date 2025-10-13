@@ -1,9 +1,17 @@
 const db = require("../db");
 
-async function findByEmailOrPseudonyme(email, pseudonyme) {
+async function findByEmail(email) {
   const [rows] = await db.query(
-    "SELECT id FROM users WHERE email = ? OR pseudonyme = ? LIMIT 1",
-    [email, pseudonyme]
+    "SELECT id FROM users WHERE email = ? LIMIT 1",
+    [email]
+  );
+  return rows[0];
+}
+
+async function findByPseudonyme(pseudonyme) {
+  const [rows] = await db.query(
+    "SELECT id FROM users WHERE pseudonyme = ? LIMIT 1",
+    [pseudonyme]
   );
   return rows[0];
 }
@@ -27,8 +35,8 @@ async function getStatusIdByName(name) {
 async function insert(user) {
   const sql = `
     INSERT INTO users
-      (id, role_id, status_id, email, pseudonyme, hash, confirm_token, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
+      (id, role_id, status_id, email, pseudonyme, hash, confirm_token, confirm_token_expires_at, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?,DATE_ADD(NOW(), INTERVAL 24 HOUR), NOW())
   `;
   await db.query(sql, [
     user.id,
@@ -40,10 +48,50 @@ async function insert(user) {
     user.confirm_token,
   ]);
 }
+//Recuperation de id et confirmed_at du user par le token,
+// servira dans le controller pour définir si le token
+// a déjà été confirmer ou pas (si oui confirmed_at != null)
+async function findByToken(token) {
+  const [rows] = await db.query(
+    `SELECT id, confirmed_at, confirm_token_expires_at FROM users WHERE confirm_token = ? LIMIT 1`,
+    [token]
+  );
+  return rows[0];
+}
+
+async function tokenConfirmation(userId) {
+  const [result] = await db.query(
+    `UPDATE users SET confirmed_at = NOW(), confirm_token = null WHERE id = ? LIMIT 1`,
+    [userId]
+  );
+  return result.affectedRows === 1;
+}
+
+async function findByEmailDetailed(email) {
+  const [rows] = await db.query(
+    `
+    SELECT id, confirmed_at, confirm_token, confirm_token_expires_at FROM users WHERE email = ? LIMIT 1`,
+    [email]
+  );
+  return rows[0];
+}
+
+async function refreshConfirmToken(userId, newToken) {
+  const [result] = await db.query(
+    `UPDATE users SET confirm_token = ?, confirm_token_expires_at = DATE_ADD(NOW(), INTERVAL 24 HOUR) WHERE id = ?)`,
+    [newToken, userId]
+  );
+  return result.affectedRows === 1;
+}
 
 module.exports = {
-  findByEmailOrPseudonyme,
+  findByEmail,
+  findByPseudonyme,
   getRoleIdByName,
   getStatusIdByName,
   insert,
+  findByToken,
+  tokenConfirmation,
+  findByEmailDetailed,
+  refreshConfirmToken,
 };

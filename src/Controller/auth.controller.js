@@ -5,21 +5,24 @@ const UserRepository = require("../Repository/UserRepository");
 module.exports = {
   register: async (req, res) => {
     try {
-      const { email, pseudonyme, password, status } = req.body; // status: "professionnel" | "candidat" | "curieux"
+      const { email, pseudonyme, password, status } = req.body;
 
-      // unicité
-      const existing = await UserRepository.findByEmailOrPseudonyme(
-        email,
+      // unicité mail et pseudo
+      const existingEmail = await UserRepository.findByEmail(email);
+
+      if (existingEmail)
+        return res.status(409).json({ message: "Email déjà utilisé." });
+
+      const existingPseudonyme = await UserRepository.findByPseudonyme(
         pseudonyme
       );
-      if (existing)
-        return res
-          .status(409)
-          .json({ message: "Email ou pseudonyme déjà utilisé." });
 
+      if (existingPseudonyme) {
+        return res.status(409).json({ message: "Pseudonyme déjà utilisé." });
+      }
       // IDs référentiels
-      const roleId = await UserRepository.getRoleIdByName("user"); // seeds -> id = 2
-      const statusId = await UserRepository.getStatusIdByName(status); // par nom, issu du body JSON saisie par le client
+      const roleId = await UserRepository.getRoleIdByName("user"); // j'attribue la valeur user par défaut
+      const statusId = await UserRepository.getStatusIdByName(status); // par nom (pro, candidat ou curieux), issu du body JSON saisie par le client
 
       if (!roleId || !statusId) {
         return res
@@ -40,11 +43,95 @@ module.exports = {
         confirm_token,
       });
 
-      return res
-        .status(201)
-        .json({ message: "Compte créé. Vérifie tes emails pour confirmer." });
+      return res.status(201).json({
+        message: "Compte créé. Vous avez reçu un email de confirmation.",
+      });
     } catch (e) {
       console.error("REGISTER_ERROR:", {
+        code: e.code,
+        errno: e.errno,
+        sqlState: e.sqlState,
+        sqlMessage: e.sqlMessage,
+        message: e.message,
+      });
+      return res.status(500).json({ message: "Erreur serveur" });
+    }
+  },
+
+  confirm: async (req, res) => {
+    try {
+      const { token } = req.body;
+      if (!token) {
+        return res.status(400).json({ message: "Token manquant" });
+      }
+      const user = await UserRepository.findByToken(token);
+      if (!user) {
+        return res.status(400).json({
+          message: "Token invalide, aucun utilisateur ne correspond !",
+        });
+      }
+      const expired =
+        !user.confirm_token_expires_at ||
+        new Date(user.confirm_token_expires_at) < new Date();
+      if (expired) {
+        return res.status(400).json({
+          message: "Token expiré, demandé un nouveau mail de confirmation.",
+        });
+      }
+
+      const accountIsConfirmed = await UserRepository.tokenConfirmation(
+        user.id
+      );
+
+      if (!accountIsConfirmed) {
+        return res.status(500).json({
+          message: "Confirmation non appliquée, aucun compte n'a été validé.",
+        });
+      }
+
+      return res.status(200).json({ message: "Compte validé avec succès!" });
+    } catch (e) {
+      console.error("CONFIRM_ERROR:", {
+        code: e.code,
+        errno: e.errno,
+        sqlState: e.sqlState,
+        sqlMessage: e.sqlMessage,
+        message: e.message,
+      });
+      return res.status(500).json({ message: "Erreur serveur" });
+    }
+  },
+
+  resendConfirmation: async (req, res) => {
+    try {
+      // etape 1 on verifie l'intégrite de l'email fourni par le client
+      const { email } = req.body;
+
+      if (!email || typeof email !== "string" || email.trim() === "") {
+        return res.status(400).json({ message: "Email manquant" });
+      }
+      const normalizeEmail = email.toLowerCase().trim();
+      //etape 2 on va chercher en db l'email et verifier qu'il n'est pas deja confirmé,
+      // si c'est le cas on dis quand meme qu'on envoi si l'email existe pour préserver la confidentialité
+      const user = await UserRepository.findByEmailDetailed(email);
+      if (!user || user.confirmed_at != null) {
+        return res.status(200).json({
+          message:
+            "Si un compte correspond à cet email, un message a été envoyé.",
+        });
+      }
+      //etape 3 on est la si l'email existe, et qu'il n'est pas confirmé 'confirmed_at == null
+      // on génère un nouveau token et on update le expire a now+24h
+      const newToken = crypto.randomBytes(32).toString("hex");
+      await UserRepository.refreshConfirmToken(user.id, newToken);
+      //ici on enverra l'email avec le lien .../auth/confirm?token=<newToken>
+
+      return res.status(200).json({
+        message:
+          "Si un compte correspond à cet email, un message a été envoyé.",
+      });
+    } catch (e) {
+      console.error("CONFIRM_ERROR:", {
         code: e.code,
         errno: e.errno,
         sqlState: e.sqlState,

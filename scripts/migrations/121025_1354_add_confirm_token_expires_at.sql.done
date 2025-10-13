@@ -1,0 +1,4 @@
+ALTER TABLE users
+  ADD COLUMN confirm_token_expires_at DATETIME NULL AFTER confirm_token;
+
+CREATE INDEX ix_users_confirm_token_expires_at ON users (confirm_token_expires_at);

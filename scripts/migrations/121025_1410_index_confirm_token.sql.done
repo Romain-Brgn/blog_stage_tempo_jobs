@@ -1,0 +1,1 @@
+CREATE INDEX ix_users_confirm_token ON users(confirm_token);

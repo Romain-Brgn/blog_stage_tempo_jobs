@@ -47,7 +47,7 @@ function requireAdmin(req, res, next) {
   }
 
   if (req.user.role_id !== 1) {
-    res.status(403).json({ message: "SAccès réservé aux administrateur" });
+    res.status(403).json({ message: "Accès réservé aux administrateur" });
   }
   return next();
 }

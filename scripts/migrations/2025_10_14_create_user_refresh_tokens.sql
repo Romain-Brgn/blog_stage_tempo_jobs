@@ -78,26 +78,26 @@ SET @sql := IF(
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
 -- 3) Ajouter la FK vers users(id) SI la table users existe et si la FK est absente
-SET @users_tbl_exists := (
-  SELECT COUNT(*)
-  FROM INFORMATION_SCHEMA.TABLES
-  WHERE TABLE_SCHEMA = DATABASE()
-    AND TABLE_NAME   = 'users'
-);
+-- SET @users_tbl_exists := (
+--   SELECT COUNT(*)
+--   FROM INFORMATION_SCHEMA.TABLES
+--   WHERE TABLE_SCHEMA = DATABASE()
+--     AND TABLE_NAME   = 'users'
+-- );
 
-SET @fk_exists := (
-  SELECT COUNT(*)
-  FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS
-  WHERE CONSTRAINT_SCHEMA = DATABASE()
-    AND CONSTRAINT_NAME   = 'fk_urt_user'
-);
+-- SET @fk_exists := (
+--   SELECT COUNT(*)
+--   FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS
+--   WHERE CONSTRAINT_SCHEMA = DATABASE()
+--     AND CONSTRAINT_NAME   = 'fk_urt_user'
+-- );
 
-SET @sql := IF(
-  @users_tbl_exists = 1 AND @fk_exists = 0,
-  "ALTER TABLE user_refresh_tokens
-     ADD CONSTRAINT fk_urt_user
-     FOREIGN KEY (user_id) REFERENCES users(id)
-     ON UPDATE CASCADE ON DELETE CASCADE",
-  "SELECT 0"
-);
+-- SET @sql := IF(
+--   @users_tbl_exists = 1 AND @fk_exists = 0,
+--   "ALTER TABLE user_refresh_tokens
+--      ADD CONSTRAINT fk_urt_user
+--      FOREIGN KEY (user_id) REFERENCES users(id)
+--      ON UPDATE CASCADE ON DELETE CASCADE",
+--   "SELECT 0"
+-- );
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;

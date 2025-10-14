@@ -15,6 +15,7 @@ app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "/src/View"));
 
 app.use(express.static(path.join(__dirname, "/src/Public")));
+app.set("trust proxy", 1);
 
 // ----ROUTES---- //
 

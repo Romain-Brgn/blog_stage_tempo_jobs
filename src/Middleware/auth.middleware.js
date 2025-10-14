@@ -11,12 +11,9 @@ function authenticateJWT(req, res, next) {
     const authHeader =
       req.headers["authorization"] || req.headers["Authorization"];
     if (!authHeader) {
-      return res
-        .status(401)
-        .json({
-          message:
-            "Token manquant ou invalide (ou header Authorization absent)",
-        });
+      return res.status(401).json({
+        message: "Token manquant ou invalide (ou header Authorization absent)",
+      });
     }
 
     // Format attendu: "Bearer <token>"
@@ -44,4 +41,15 @@ function authenticateJWT(req, res, next) {
   }
 }
 
-module.exports = { authenticateJWT };
+function requireAdmin(req, res, next) {
+  if (!req.user) {
+    return res.status(401).json({ message: "Token manquant ou invalide" });
+  }
+
+  if (req.user.role_id !== 1) {
+    res.status(403).json({ message: "SAccès réservé aux administrateur" });
+  }
+  return next();
+}
+
+module.exports = { authenticateJWT, requireAdmin };

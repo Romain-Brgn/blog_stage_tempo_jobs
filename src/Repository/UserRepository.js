@@ -99,6 +99,14 @@ async function findForLoginByPseudonyme(pseudonyme) {
   return rows[0] || null;
 }
 
+async function setLastLogin(userId) {
+  const [result] = await db.query(
+    `UPDATE users SET last_login = NOW() WHERE id = ?`,
+    [userId]
+  );
+  return result.affectedRows === 1;
+}
+
 module.exports = {
   findByEmail,
   findByPseudonyme,
@@ -111,4 +119,5 @@ module.exports = {
   refreshConfirmToken,
   findForLoginByEmail,
   findForLoginByPseudonyme,
+  setLastLogin,
 };

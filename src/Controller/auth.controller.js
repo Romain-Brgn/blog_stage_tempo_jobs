@@ -172,6 +172,12 @@ module.exports = {
         expiresIn: "1h",
       });
 
+      try {
+        await UserRepository.setLastLogin(user.id);
+      } catch (e) {
+        console.warn("setLastLogin failed:", e.code || e.message);
+      }
+
       return res.status(200).json({
         access_token: accessToken,
         token_type: "Bearer",

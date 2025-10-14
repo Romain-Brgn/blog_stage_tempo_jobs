@@ -8,6 +8,8 @@ const {
 } = require("../Validator/auth.validators");
 
 const AuthController = require("../Controller/auth.controller");
+const { authenticateJWT } = require("../Middleware/auth.middleware");
+const { loginLimiter } = require("../Middleware/rate-limiter.middleware");
 
 router.post(
   "/register",
@@ -23,6 +25,10 @@ router.post(
   AuthController.resendConfirmation
 );
 
-router.post("/login", loginValidator, AuthController.login);
+router.post("/login", loginLimiter, loginValidator, AuthController.login);
+
+router.get("/me", authenticateJWT, (req, res) => {
+  return res.status(200).json({ user: req.user });
+});
 
 module.exports = router;

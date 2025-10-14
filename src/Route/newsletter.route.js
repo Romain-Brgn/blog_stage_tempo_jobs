@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { NewsletterController } from '../controllers/newsletterController.js';
+import { NewsletterController } from '../Controller/newsletterController.js';
 
 const router = Router();
 
@@ -10,3 +10,4 @@ router.put('/:id', NewsletterController.update);
 router.delete('/:id', NewsletterController.delete);
 
 export default router;
+no

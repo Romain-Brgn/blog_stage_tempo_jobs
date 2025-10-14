@@ -21,9 +21,11 @@ app.use(express.static(path.join(__dirname, "/src/Public")));
 const routeAdmin = require("./src/Route/admin.route");
 const routePublic = require("./src/Route/public.route");
 const routeAuth = require("./src/Route/auth.route");
+const routeNewsletter = require("./src/Route/newsletterRoutes.js");
 
 app.use("/admin", routeAdmin);
 app.use("/auth", routeAuth);
+app.use("/newsletters", routeNewsletter);
 // app.use("/", routePublic);
 
 // -------------- //

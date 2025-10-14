@@ -1,7 +1,7 @@
 const { body, validationResult } = require("express-validator");
 const C = require("../Config/constraints");
 
-const registerValidators = [
+const emailValidator = [
   body("email")
     .trim()
     .notEmpty()
@@ -19,7 +19,9 @@ const registerValidators = [
       gmail_remove_dots: false, // évite les surprises “janedoe” == “jane.doe”
       gmail_remove_subaddress: false,
     }),
+];
 
+const registerValidators = [
   body("pseudonyme")
     .trim()
     .isLength({ min: C.pseudonyme.min, max: C.pseudonyme.max })
@@ -62,4 +64,32 @@ const tokenValidator = [
   },
 ];
 
-module.exports = { registerValidators, tokenValidator };
+const loginValidator = [
+  body("identifier")
+    .trim()
+    .isString()
+    .withMessage("Identifiant invalide")
+    .isLength({ min: 1 })
+    .withMessage("Identifiant requis"),
+
+  body("password")
+    .isString()
+    .withMessage("Mot de passe invalide")
+    .isLength({ min: C.password.min })
+    .withMessage(`Mot de passe min ${C.password.min} caractères`),
+
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    next();
+  },
+];
+
+module.exports = {
+  loginValidator,
+  emailValidator,
+  registerValidators,
+  tokenValidator,
+};

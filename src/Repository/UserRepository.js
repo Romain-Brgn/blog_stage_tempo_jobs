@@ -61,7 +61,7 @@ async function findByToken(token) {
 
 async function tokenConfirmation(userId) {
   const [result] = await db.query(
-    `UPDATE users SET confirmed_at = NOW(), confirm_token = null WHERE id = ? LIMIT 1`,
+    `UPDATE users SET confirmed_at = NOW(), confirm_token = null WHERE id = ?`,
     [userId]
   );
   return result.affectedRows === 1;
@@ -78,10 +78,25 @@ async function findByEmailDetailed(email) {
 
 async function refreshConfirmToken(userId, newToken) {
   const [result] = await db.query(
-    `UPDATE users SET confirm_token = ?, confirm_token_expires_at = DATE_ADD(NOW(), INTERVAL 24 HOUR) WHERE id = ?)`,
+    `UPDATE users SET confirm_token = ?, confirm_token_expires_at = DATE_ADD(NOW(), INTERVAL 24 HOUR) WHERE id = ?`,
     [newToken, userId]
   );
   return result.affectedRows === 1;
+}
+
+async function findForLoginByEmail(email) {
+  const [rows] = await db.query(
+    `SELECT id, email, pseudonyme, hash, confirmed_at, role_id, status_id FROM users WHERE email = ? LIMIT 1`,
+    [email]
+  );
+  return rows[0] || null;
+}
+async function findForLoginByPseudonyme(pseudonyme) {
+  const [rows] = await db.query(
+    `SELECT id, email, pseudonyme, hash, confirmed_at, role_id, status_id FROM users WHERE pseudonyme = ? LIMIT 1 `,
+    [pseudonyme]
+  );
+  return rows[0] || null;
 }
 
 module.exports = {
@@ -94,4 +109,6 @@ module.exports = {
   tokenConfirmation,
   findByEmailDetailed,
   refreshConfirmToken,
+  findForLoginByEmail,
+  findForLoginByPseudonyme,
 };

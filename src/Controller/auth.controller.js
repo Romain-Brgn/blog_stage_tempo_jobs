@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 const UserRepository = require("../Repository/UserRepository");
+const jwt = require("jsonwebtoken");
 
 module.exports = {
   register: async (req, res) => {
@@ -75,7 +76,7 @@ module.exports = {
         new Date(user.confirm_token_expires_at) < new Date();
       if (expired) {
         return res.status(400).json({
-          message: "Token expiré, demandé un nouveau mail de confirmation.",
+          message: "Token expiré, demander un nouveau mail de confirmation.",
         });
       }
 
@@ -104,13 +105,9 @@ module.exports = {
 
   resendConfirmation: async (req, res) => {
     try {
-      // etape 1 on verifie l'intégrite de l'email fourni par le client
+      // etape 1 on récupère l'email fourni par le client (le validator as déja vérifier son intégrité)
       const { email } = req.body;
 
-      if (!email || typeof email !== "string" || email.trim() === "") {
-        return res.status(400).json({ message: "Email manquant" });
-      }
-      const normalizeEmail = email.toLowerCase().trim();
       //etape 2 on va chercher en db l'email et verifier qu'il n'est pas deja confirmé,
       // si c'est le cas on dis quand meme qu'on envoi si l'email existe pour préserver la confidentialité
       const user = await UserRepository.findByEmailDetailed(email);
@@ -132,6 +129,56 @@ module.exports = {
       });
     } catch (e) {
       console.error("CONFIRM_ERROR:", {
+        code: e.code,
+        errno: e.errno,
+        sqlState: e.sqlState,
+        sqlMessage: e.sqlMessage,
+        message: e.message,
+      });
+      return res.status(500).json({ message: "Erreur serveur" });
+    }
+  },
+
+  login: async (req, res) => {
+    try {
+      const { identifier, password } = req.body;
+      const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
+
+      const user = isEmail
+        ? await UserRepository.findForLoginByEmail(identifier)
+        : await UserRepository.findForLoginByPseudonyme(identifier);
+
+      if (!user) {
+        return res.status(401).json({ message: "Identifiants invalides" });
+      }
+      if (!user.confirmed_at) {
+        return res.status(403).json({
+          message:
+            "Compte non confirmé. Vérifiez vos emails ou demandez une nouvelle confirmation.",
+        });
+      }
+      const isPasswordCorrect = await bcrypt.compare(password, user.hash);
+
+      if (!isPasswordCorrect) {
+        return res.status(401).json({ message: "Identifiants invalides" });
+      }
+
+      const payload = {
+        sub: user.id,
+        role_id: user.role_id,
+        status_id: user.status_id,
+      };
+      const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
+        expiresIn: "1h",
+      });
+
+      return res.status(200).json({
+        access_token: accessToken,
+        token_type: "Bearer",
+        expires_in: 3600,
+      });
+    } catch (e) {
+      console.error("LOGIN_ERROR:", {
         code: e.code,
         errno: e.errno,
         sqlState: e.sqlState,

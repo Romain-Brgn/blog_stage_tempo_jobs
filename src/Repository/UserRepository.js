@@ -1,4 +1,4 @@
-const db = require("../db");
+const db = require("../Config/db");
 
 async function findByEmail(email) {
   const [rows] = await db.query(

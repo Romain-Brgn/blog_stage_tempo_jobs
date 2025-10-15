@@ -1,5 +1,7 @@
 const path = require("path");
 const express = require("express");
+const newsletterRoute = require("./src/Route/newsletter.route");
+
 require("dotenv").config({ path: path.resolve(__dirname, ".env.local") });
 
 // const session = require("express-session");
@@ -9,6 +11,8 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
+
+app.use("/newsletters", newsletterRoute);
 app.use(express.urlencoded({ extended: true }));
 
 app.set("view engine", "ejs");
@@ -25,7 +29,7 @@ const routeNewsletter = require("./src/Route/newsletter.route.js");
 
 app.use("/admin", routeAdmin);
 app.use("/auth", routeAuth);
-app.use("/newsletters", routeNewsletter);
+
 // app.use("/", routePublic);
 
 // -------------- //

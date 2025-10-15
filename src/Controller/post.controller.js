@@ -8,7 +8,7 @@ const PostRepository = require("../Repository/PostRepository");
 function handleValidation(req, res) {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+    return res.status(422).json({ errors: errors.array() });
   }
 }
 
@@ -90,7 +90,7 @@ module.exports = {
     }
   },
 
-  // PUT /posts/:id — Mise à jour (admin): vérifie l'existence puis renvoie le post mis à jour
+  // PUT /posts/:id — Mise à jour (admin ou propriétaire): vérifie l'existence et les permissions
   async update(req, res) {
     const err = handleValidation(req, res);
     if (err) return;
@@ -99,8 +99,13 @@ module.exports = {
       const found = await PostRepository.findById(id);
       if (!found) return res.status(404).json({ message: "Article introuvable" });
 
+      // Vérification des permissions: admin (role_id=1) ou propriétaire du post
+      const isAdmin = req.user?.role_id === 1;
+      const isOwner = req.user?.sub && req.user.sub === found.user_id;
+      if (!isAdmin && !isOwner) return res.status(403).json({ message: "Interdit" });
+
       const updated = await PostRepository.update(id, req.body);
-      if (!updated) return res.status(400).json({ message: "Aucune modification" });
+      if (!updated) return res.status(422).json({ message: "Aucune modification" });
       const refreshed = await PostRepository.findById(id);
       return res.status(200).json(refreshed);
     } catch (e) {
@@ -109,12 +114,20 @@ module.exports = {
     }
   },
 
-  // DELETE /posts/:id — Suppression (admin): 204 si OK
+  // DELETE /posts/:id — Suppression (admin ou propriétaire): 204 si OK
   async remove(req, res) {
     try {
       const id = Number(req.params.id);
+      const found = await PostRepository.findById(id);
+      if (!found) return res.status(404).json({ message: "Article introuvable" });
+
+      // Vérification des permissions: admin (role_id=1) ou propriétaire du post
+      const isAdmin = req.user?.role_id === 1;
+      const isOwner = req.user?.sub && req.user.sub === found.user_id;
+      if (!isAdmin && !isOwner) return res.status(403).json({ message: "Interdit" });
+
       const ok = await PostRepository.remove(id);
-      if (!ok) return res.status(404).json({ message: "Article introuvable" });
+      if (!ok) return res.status(500).json({ message: "Erreur lors de la suppression" });
       return res.status(204).send();
     } catch (e) {
       console.error("POST_DELETE_ERROR:", e.message);

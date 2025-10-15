@@ -8,7 +8,7 @@ const PostRepository = require("../Repository/PostRepository");
 function handleValidation(req, res) {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+    return res.status(422).json({ errors: errors.array() });
   }
 }
 
@@ -79,7 +79,7 @@ module.exports = {
       if (!isAdmin && !isOwner) return res.status(403).json({ message: "Interdit" });
 
       const updated = await CommentRepository.update(id, req.body);
-      if (!updated) return res.status(400).json({ message: "Aucune modification" });
+      if (!updated) return res.status(422).json({ message: "Aucune modification" });
       const refreshed = await CommentRepository.findById(id);
       return res.status(200).json(refreshed);
     } catch (e) {
@@ -100,7 +100,7 @@ module.exports = {
       if (!isAdmin && !isOwner) return res.status(403).json({ message: "Interdit" });
 
       const ok = await CommentRepository.remove(id);
-      if (!ok) return res.status(400).json({ message: "Suppression échouée" });
+      if (!ok) return res.status(500).json({ message: "Erreur lors de la suppression" });
       return res.status(204).send();
     } catch (e) {
       console.error("COMMENT_DELETE_ERROR:", e.message);

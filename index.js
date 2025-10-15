@@ -30,7 +30,7 @@ app.use("/admin", routeAdmin);
 app.use("/auth", routeAuth);
 app.use("/newsletters", routeNewsletter);
 app.use("/posts", routePosts);
-app.use("/", routeComments);
+app.use("/comments", routeComments);
 // app.use("/", routePublic);
 
 // -------------- //

@@ -1,5 +1,5 @@
 // Routes HTTP pour les posts.
-// Public: lecture; Admin: écriture (création/màj/suppression).
+// Public: lecture; Auth: création; Admin/Propriétaire: modification/suppression.
 const express = require("express");
 const router = express.Router();
 
@@ -12,19 +12,19 @@ const {
 } = require("../Validator/post.validators");
 
 // Liste paginée (publique)
-router.get("/", listPostsValidators, PostController.list);
+router.get("/all-posts", listPostsValidators, PostController.list);
 
 // Récupérer un article (public)
-router.get("/:id", PostController.getById);
+router.get("/get-post/:id", PostController.getById);
 
-// Créer un article (admin)
-router.post("/", authenticateJWT, requireAdmin, createPostValidators, PostController.create);
+// Créer un article (auth requis)
+router.post("/create-post", authenticateJWT, createPostValidators, PostController.create);
 
-// Mettre à jour un article (admin)
-router.put("/:id", authenticateJWT, requireAdmin, updatePostValidators, PostController.update);
+// Mettre à jour un article (admin ou propriétaire)
+router.put("/update-post/:id", authenticateJWT, updatePostValidators, PostController.update);
 
-// Supprimer un article (admin)
-router.delete("/:id", authenticateJWT, requireAdmin, PostController.remove);
+// Supprimer un article (admin ou propriétaire)
+router.delete("/delete-post/:id", authenticateJWT, PostController.remove);
 
 module.exports = router;
 

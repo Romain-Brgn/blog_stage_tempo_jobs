@@ -49,7 +49,7 @@ router.post("/logout", async (req, res) => {
       .update(refresh_token)
       .digest("hex");
     await UserRepository.revokeRefreshToken(hash);
-
+    res.clearCookie("refresh_token", { path: "/auth" });
     return res.status(200).json({ message: "Déconnecté" });
   } catch (e) {
     // on garde une réponse neutre

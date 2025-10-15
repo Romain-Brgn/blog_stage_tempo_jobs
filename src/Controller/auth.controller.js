@@ -229,7 +229,14 @@ module.exports = {
 
   refresh: async (req, res) => {
     try {
-      const { refresh_token } = req.body;
+      // 0) Lire le refresh token : cookie > body
+      const rtFromBody = req.body?.refresh_token;
+      const rtFromCookie = req.cookies?.refresh_token;
+      const refresh_token =
+        typeof rtFromBody === "string" && rtFromBody.trim()
+          ? rtFromBody
+          : rtFromCookie;
+
       if (typeof refresh_token !== "string" || refresh_token.trim() === "") {
         return res.status(400).json({ message: "Refresh token manquant." });
       }
@@ -244,29 +251,38 @@ module.exports = {
         return res.status(401).json({ message: "Refresh token invalide" });
       }
 
-      // 2) Révocation de l'ancien RT (rotation)
+      // 2) Révocation (rotation)
       await UserRepository.revokeRefreshToken(oldHash);
 
-      // 3) Charger l'utilisateur pour signer les claims
+      // 3) Charger l’utilisateur
       const user = await UserRepository.findByIdForClaims(rt.user_id);
       if (!user) {
         return res.status(401).json({ message: "Session invalide." });
       }
 
-      // 4) Générer un NOUVEAU refresh token (brut + hash) + expiration
-      const newRefreshToken = crypto.randomBytes(32).toString("hex"); // BRUT (à renvoyer au client)
+      // 4) Générer NOUVEAU refresh + stocker hash
+      const newRefreshToken = crypto.randomBytes(32).toString("hex"); // BRUT (client)
       const newHash = crypto
         .createHash("sha256")
         .update(newRefreshToken)
-        .digest("hex"); // HASH (à stocker)
-      const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // +30 jours
+        .digest("hex"); // HASH (DB)
+      const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
       await UserRepository.createRefreshToken({
         user_id: user.id,
         token_hash: newHash,
         expires_at: expiresAt,
         user_agent: req.headers["user-agent"] ?? null,
-        ip: req.ip ?? null, // pense à app.set("trust proxy", 1) si tu es derrière un proxy
+        ip: req.ip ?? null,
+      });
+
+      // → poser le nouveau refresh en cookie httpOnly (écrase l’ancien)
+      res.cookie("refresh_token", newRefreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/auth",
+        maxAge: 30 * 24 * 60 * 60 * 1000,
       });
 
       // 5) Nouveau access token
@@ -276,10 +292,8 @@ module.exports = {
         { expiresIn: "1h" }
       );
 
-      // 6) Réponse
       return res.status(200).json({
         access_token: accessToken,
-        refresh_token: newRefreshToken, // le token BRUT pour le client
         token_type: "Bearer",
         expires_in: 3600,
       });

@@ -27,6 +27,7 @@ const routeNewsletter = require("./src/Route/newsletter.route.js");
 app.use("/admin", routeAdmin);
 app.use("/auth", routeAuth);
 app.use("/newsletters", routeNewsletter);
+app.use("/posts", routePosts);
 // app.use("/", routePublic);
 
 // -------------- //

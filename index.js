@@ -22,8 +22,7 @@ app.set("trust proxy", 1);
 const routeAdmin = require("./src/Route/admin.route");
 const routePublic = require("./src/Route/public.route");
 const routeAuth = require("./src/Route/auth.route");
-const routeNewsletter = require("./src/Route/newsletterRoutes.js");
-const routePosts = require("./src/Route/post.route");
+const routeNewsletter = require("./src/Route/newsletter.route.js");
 
 app.use("/admin", routeAdmin);
 app.use("/auth", routeAuth);

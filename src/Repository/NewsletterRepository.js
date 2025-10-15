@@ -1,4 +1,4 @@
-import { pool } from '../config/db.js';
+import { pool } from '../config/constraints.js';
 
 export const NewsletterModel = {
   // 🔹 Récupérer toutes les campagnes

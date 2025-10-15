@@ -1,10 +1,10 @@
-import { NewsletterModel } from '../models/newsletterModel.js';
+import { NewsletterModel } from '../Repository/NewsletterRepository.js';
 
 export const NewsletterController = {
   // GET /api/newsletters
   async getAll(req, res) {
     try {
-      const campaigns = await NewsletterModel.getAll();
+      const campaigns = await NewsletterRepository.getAll();
       res.json(campaigns);
     } catch (err) {
       console.error(err);
@@ -16,7 +16,7 @@ export const NewsletterController = {
   async getById(req, res) {
     try {
       const { id } = req.params;
-      const campaign = await NewsletterModel.getById(id);
+      const campaign = await NewsletterRepository.getById(id);
       if (!campaign) return res.status(404).json({ message: 'Campagne non trouvée' });
       res.json(campaign);
     } catch (err) {
@@ -28,7 +28,7 @@ export const NewsletterController = {
   async create(req, res) {
     try {
       const data = req.body;
-      const newCampaign = await NewsletterModel.create(data);
+      const newCampaign = await NewsletterRepository.create(data);
       res.status(201).json(newCampaign);
     } catch (err) {
       res.status(500).json({ message: 'Erreur lors de la création' });
@@ -39,7 +39,7 @@ export const NewsletterController = {
   async update(req, res) {
     try {
       const { id } = req.params;
-      const updated = await NewsletterModel.update(id, req.body);
+      const updated = await NewsletterRepository.update(id, req.body);
       if (!updated) return res.status(404).json({ message: 'Campagne non trouvée' });
       res.json({ message: 'Mise à jour réussie' });
     } catch (err) {
@@ -51,7 +51,7 @@ export const NewsletterController = {
   async delete(req, res) {
     try {
       const { id } = req.params;
-      const deleted = await NewsletterModel.delete(id);
+      const deleted = await NewsletterRepository.delete(id);
       if (!deleted) return res.status(404).json({ message: 'Campagne non trouvée' });
       res.json({ message: 'Campagne supprimée' });
     } catch (err) {

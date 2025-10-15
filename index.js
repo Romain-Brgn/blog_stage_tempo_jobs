@@ -22,12 +22,11 @@ app.set("trust proxy", 1);
 const routeAdmin = require("./src/Route/admin.route");
 const routePublic = require("./src/Route/public.route");
 const routeAuth = require("./src/Route/auth.route");
-const routeNewsletter = require("./src/Route/newsletter.route.js");
 
 app.use("/admin", routeAdmin);
 app.use("/auth", routeAuth);
-app.use("/newsletters", routeNewsletter);
-app.use("/posts", routePosts);
+
+// app.use("/posts", routePosts); @MEDINA TU DOIS DECLARER JUSTE AU DESSUS TA ROUTE
 // app.use("/", routePublic);
 
 // -------------- //

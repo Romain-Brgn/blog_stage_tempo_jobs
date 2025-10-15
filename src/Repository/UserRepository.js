@@ -107,6 +107,68 @@ async function setLastLogin(userId) {
   return result.affectedRows === 1;
 }
 
+/**Ici je crée un autre token
+ * qui aura 30 jours avant d'expirer
+ * qui permet de préserver la connexion
+ * sur un ou plusieurs device
+ * sans avoir besoin de retaper un password
+ * + pour l'ux
+ */
+async function createRefreshToken({
+  user_id,
+  token_hash,
+  expires_at,
+  user_agent,
+  ip,
+}) {
+  const sql = `
+    INSERT INTO user_refresh_tokens
+      (user_id, token_hash, expires_at, user_agent, ip)
+    VALUES (?, ?, ?, ?, ?)
+  `;
+  const [result] = await db.query(sql, [
+    user_id,
+    token_hash,
+    expires_at,
+    user_agent ?? null,
+    ip ?? null,
+  ]);
+  return result.affectedRows === 1;
+}
+//ici je recupere via post/auth/refresh le hash du client et le compare en bdd pour savoir
+//si il est toujours actif et si il n'a pas été révoqué
+async function findValidRefreshToken(token_hash) {
+  const [rows] = await db.query(
+    `SELECT *
+     FROM user_refresh_tokens
+     WHERE token_hash = ?
+       AND revoked_at IS NULL
+       AND expires_at >= NOW()
+     LIMIT 1`,
+    [token_hash]
+  );
+  return rows[0] || null;
+}
+// ici on peux révoqué (rotation donc création d'un nouveau token, ou bien logout)
+async function revokeRefreshToken(token_hash) {
+  const [result] = await db.query(
+    `UPDATE user_refresh_tokens
+     SET revoked_at = NOW()
+     WHERE token_hash = ?
+       AND revoked_at IS NULL`,
+    [token_hash]
+  );
+  return result.affectedRows === 1;
+}
+
+async function findByIdForClaims(userId) {
+  const [rows] = await db.query(
+    "SELECT id, role_id, status_id FROM users WHERE id = ? LIMIT 1",
+    [userId]
+  );
+  return rows[0] || null;
+}
+
 module.exports = {
   findByEmail,
   findByPseudonyme,
@@ -120,4 +182,8 @@ module.exports = {
   findForLoginByEmail,
   findForLoginByPseudonyme,
   setLastLogin,
+  createRefreshToken,
+  findValidRefreshToken,
+  revokeRefreshToken,
+  findByIdForClaims,
 };

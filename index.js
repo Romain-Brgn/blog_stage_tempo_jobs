@@ -16,6 +16,10 @@ app.use(express.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "/src/View"));
 
+const expressLayouts = require("express-ejs-layouts");
+app.use(expressLayouts);
+app.set("layout", "layouts/layout");
+
 app.use(express.static(path.join(__dirname, "/src/Public")));
 app.set("trust proxy", 1);
 

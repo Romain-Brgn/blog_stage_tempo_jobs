@@ -30,6 +30,9 @@ router.post(
 );
 
 router.post("/login", loginLimiter, loginValidator, AuthController.login);
+router.get("/login", (req, res) => {
+  res.render("Auth/login", { title: "Connexion", flash: null });
+});
 
 router.post("/refresh", AuthController.refresh);
 

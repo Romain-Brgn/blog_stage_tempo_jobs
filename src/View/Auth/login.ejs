@@ -1,0 +1,111 @@
+<section class="row justify-content-center">
+  <div class="col-12 col-sm-10 col-md-8 col-lg-5">
+    <div class="card shadow-sm">
+      <div class="card-body p-4 p-md-5">
+        <h1 class="h4 mb-3 text-center">Connexion</h1>
+
+        <%- include('../partials/flash', { flash }) %>
+
+        <form id="loginForm" novalidate>
+          <div class="mb-3">
+            <label for="identifier" class="form-label"
+              >Email ou pseudonyme</label
+            >
+            <input
+              type="text"
+              class="form-control"
+              id="identifier"
+              name="identifier"
+              required
+              autocomplete="username"
+            />
+            <div class="invalid-feedback">
+              Renseigne ton email ou ton pseudo.
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="password" class="form-label">Mot de passe</label>
+            <input
+              type="password"
+              class="form-control"
+              id="password"
+              name="password"
+              required
+              autocomplete="current-password"
+            />
+            <div class="invalid-feedback">Le mot de passe est requis.</div>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100">
+            Se connecter
+          </button>
+
+          <div
+            id="formError"
+            class="text-danger small mt-3"
+            style="display: none"
+          ></div>
+
+          <div class="d-flex justify-content-between mt-3">
+            <a href="/auth/resend-confirmation" class="small"
+              >Renvoyer l’email de confirmation</a
+            >
+            <a href="/auth/forgot" class="small">Mot de passe oublié ?</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const form = document.getElementById("loginForm");
+  const errBox = document.getElementById("formError");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    errBox.style.display = "none";
+    errBox.textContent = "";
+
+    // Validation HTML5 basique
+    if (!form.checkValidity()) {
+      form.classList.add("was-validated");
+      return;
+    }
+
+    const payload = {
+      identifier: form.identifier.value.trim(),
+      password: form.password.value,
+    };
+
+    try {
+      const res = await fetch("/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // IMPORTANT : pour que le cookie httpOnly `refresh_token` soit bien stocké côté navigateur,
+        // on force l'envoi/recep des cookies (même origine = OK, sinon ajouter CORS côté serveur).
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        errBox.textContent = data.message || "Erreur de connexion.";
+        errBox.style.display = "block";
+        return;
+      }
+
+      const data = await res.json(); // { access_token, token_type, expires_in }
+      // Stocke l'access token en mémoire (ex. window.appState) ou sessionStorage si tu veux persister l'onglet.
+      sessionStorage.setItem("access_token", data.access_token);
+
+      // Redirection après login (dashboard admin si admin, sinon page d’accueil)
+      // Ici simple redirection vers l’admin : ta garde côté serveur vérifiera le rôle.
+      window.location.assign("/admin/ping");
+    } catch (err) {
+      errBox.textContent = "Erreur réseau. Réessaie.";
+      errBox.style.display = "block";
+    }
+  });
+</script>

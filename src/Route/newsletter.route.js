@@ -1,5 +1,5 @@
 const express = require('express');
-const { NewsletterController } = require('../Controller/newsletterController.js');
+const { NewsletterController } = require('../Controller/newsletter.controller.js');
 const router = express.Router();
 
 router.get('/', NewsletterController.getAll);

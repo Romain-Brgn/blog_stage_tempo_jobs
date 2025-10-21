@@ -43,6 +43,7 @@ module.exports = {
         hash,
         confirm_token,
       });
+      /**Ici on mettra l'envoi de mail avec brevo, voir avec karim */
 
       return res.status(201).json({
         message: "Compte créé. Vous avez reçu un email de confirmation.",

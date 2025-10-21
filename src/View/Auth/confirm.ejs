@@ -1,0 +1,152 @@
+<%- include('../partials/flash', { flash: flash || null }) %>
+
+<section
+  class="d-flex align-items-center"
+  style="min-height: 100svh; padding: 24px 12px"
+>
+  <div class="container">
+    <div class="mx-auto" style="max-width: 560px">
+      <div class="text-center mb-4">
+        <img src="/Image/blue_logo.svg" alt="TempoJobs" style="height: 48px" />
+      </div>
+
+      <h1 class="h4 text-center brand-title mb-3">Confirmation du compte</h1>
+      <p class="text-center text-muted mb-4">
+        Nous finalisons l’activation de votre compte.
+      </p>
+
+      <div id="statusBox" class="alert d-none" role="alert"></div>
+
+      <!-- Bloc succès -->
+      <div id="successBox" class="card border-0 shadow-sm rounded-4 d-none">
+        <div class="card-body text-center p-4">
+          <p class="mb-3">Votre compte a été confirmé avec succès 🎉</p>
+          <a class="btn btn-brand" href="/auth/login">Se connecter</a>
+        </div>
+      </div>
+
+      <!-- Bloc erreur / expiré -->
+      <div id="retryBox" class="card border-0 shadow-sm rounded-4 d-none mt-3">
+        <div class="card-body p-4">
+          <p class="mb-3">
+            Le lien semble invalide ou expiré. Vous pouvez demander un nouvel
+            email de confirmation :
+          </p>
+          <form id="resendForm" novalidate class="needs-validation">
+            <div class="mb-3">
+              <label for="email" class="form-label">Votre email</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                class="form-control"
+                required
+                autocomplete="email"
+                placeholder="vous@exemple.com"
+              />
+              <div class="invalid-feedback">Saisissez un email valide.</div>
+            </div>
+            <button type="submit" class="btn btn-outline-primary w-100">
+              Renvoyer l’email
+            </button>
+
+            <div
+              id="resendMsg"
+              class="alert alert-info small mt-3 d-none"
+            ></div>
+          </form>
+        </div>
+      </div>
+
+      <div style="height: 12px"></div>
+    </div>
+  </div>
+</section>
+
+<script>
+  // ---- Utilitaires DOM
+  const statusBox = document.getElementById("statusBox");
+  const successBox = document.getElementById("successBox");
+  const retryBox = document.getElementById("retryBox");
+  const resendForm = document.getElementById("resendForm");
+  const resendMsg = document.getElementById("resendMsg");
+
+  function showStatus(type, msg) {
+    statusBox.className = "alert alert-" + type;
+    statusBox.textContent = msg;
+    statusBox.classList.remove("d-none");
+  }
+  function hideStatus() {
+    statusBox.classList.add("d-none");
+    statusBox.textContent = "";
+  }
+
+  // ---- Récupère le token depuis l'URL
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get("token");
+
+  // ---- Si pas de token => propose direct le resend
+  (async function run() {
+    if (!token) {
+      showStatus("warning", "Aucun token détecté dans l’URL.");
+      retryBox.classList.remove("d-none");
+      return;
+    }
+
+    hideStatus();
+    showStatus("info", "Validation en cours…");
+
+    try {
+      const res = await fetch("/auth/confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ token }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok) {
+        hideStatus();
+        successBox.classList.remove("d-none");
+      } else {
+        // 400 token invalide/expiré, 410 déjà confirmé, etc. -> on propose resend
+        const msg = data?.message || "Impossible de confirmer ce compte.";
+        showStatus("danger", msg);
+        retryBox.classList.remove("d-none");
+      }
+    } catch (err) {
+      showStatus("danger", "Erreur réseau. Réessayez plus tard.");
+      retryBox.classList.remove("d-none");
+    }
+  })();
+
+  // ---- Formulaire "renvoyer la confirmation"
+  resendForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    resendMsg.classList.add("d-none");
+    resendMsg.textContent = "";
+
+    if (!resendForm.checkValidity()) {
+      resendForm.classList.add("was-validated");
+      return;
+    }
+
+    try {
+      const res = await fetch("/auth/resend-confirmation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email: resendForm.email.value.trim() }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      resendMsg.textContent =
+        data?.message || "Si un compte correspond, un email a été envoyé.";
+      resendMsg.classList.remove("d-none");
+    } catch {
+      resendMsg.textContent = "Erreur réseau. Réessayez.";
+      resendMsg.classList.remove("d-none");
+    }
+  });
+</script>

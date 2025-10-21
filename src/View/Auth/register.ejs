@@ -1,0 +1,176 @@
+<section class="d-flex align-items-center">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div style="min-height: 100svh; padding: 24px 12px">
+        <div class="text-center mb-4">
+          <img
+            src="/Image/blue_logo.svg"
+            alt="TempoJobs"
+            style="height: 48px"
+          />
+        </div>
+
+        <h1 class="h3 text-center brand-title mb-1">Créer un compte</h1>
+        <p class="text-center text-muted mb-4">Rejoignez la brigade 👨‍🍳👩‍🍳</p>
+
+        <%- include('../partials/flash', { flash: flash || null }) %>
+
+        <div class="card border-0 shadow-sm rounded-4">
+          <div class="card-body p-4 p-md-5">
+            <form id="registerForm" novalidate class="needs-validation">
+              <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input
+                  type="email"
+                  class="form-control"
+                  id="email"
+                  name="email"
+                  placeholder="vous@exemple.com"
+                  required
+                  autocomplete="email"
+                />
+                <div class="invalid-feedback">Saisissez un email valide.</div>
+              </div>
+
+              <div class="mb-3">
+                <label for="pseudonyme" class="form-label">Pseudonyme</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="pseudonyme"
+                  name="pseudonyme"
+                  placeholder="ex. chef_marie"
+                  required
+                  minlength="3"
+                  maxlength="50"
+                  pattern="^[a-zA-Z0-9_.-]+$"
+                />
+                <div class="invalid-feedback">
+                  3–50 caractères (lettres, chiffres, _ . -).
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label for="password" class="form-label">Mot de passe</label>
+                <input
+                  type="password"
+                  class="form-control"
+                  id="password"
+                  name="password"
+                  required
+                  minlength="8"
+                  placeholder="Au moins 8 caractères"
+                />
+                <div class="invalid-feedback">Au moins 8 caractères.</div>
+              </div>
+
+              <div class="mb-3">
+                <label for="status" class="form-label">Vous êtes…</label>
+                <select id="status" name="status" class="form-select" required>
+                  <option value="" selected disabled>Choisir…</option>
+                  <option value="professionnel">Professionnel</option>
+                  <option value="candidat">Candidat</option>
+                  <option value="curieux">Curieux</option>
+                </select>
+                <div class="invalid-feedback">Sélectionnez un statut.</div>
+              </div>
+
+              <div class="form-check mb-4">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  value="1"
+                  id="cgu"
+                  required
+                />
+                <label class="form-check-label" for="cgu">
+                  J’accepte les
+                  <a class="link-brand" href="/legal/terms" target="_blank"
+                    >Conditions d’utilisation</a
+                  >
+                  et la
+                  <a class="link-brand" href="/legal/privacy" target="_blank"
+                    >Politique de confidentialité</a
+                  >.
+                </label>
+                <div class="invalid-feedback">
+                  Vous devez accepter pour continuer.
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-brand w-100">
+                Créer mon compte
+              </button>
+
+              <div
+                id="formError"
+                class="alert alert-danger py-2 small mt-3 d-none"
+              ></div>
+              <div
+                id="formOk"
+                class="alert alert-success py-2 small mt-3 d-none"
+              ></div>
+
+              <p class="text-center text-muted small mt-4 mb-0">
+                Déjà un compte ?
+                <a href="/auth/login" class="link-brand">Se connecter</a>
+              </p>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const form = document.getElementById("registerForm");
+  const errBox = document.getElementById("formError");
+  const okBox = document.getElementById("formOk");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    errBox.classList.add("d-none");
+    errBox.textContent = "";
+    okBox.classList.add("d-none");
+    okBox.textContent = "";
+
+    if (!form.checkValidity()) {
+      form.classList.add("was-validated");
+      return;
+    }
+
+    const payload = {
+      email: form.email.value.trim(),
+      pseudonyme: form.pseudonyme.value.trim(),
+      password: form.password.value,
+      status: form.status.value,
+    };
+
+    try {
+      const res = await fetch("/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        errBox.textContent = data?.message || "Inscription impossible.";
+        errBox.classList.remove("d-none");
+        return;
+      }
+
+      okBox.textContent =
+        data?.message || "Compte créé. Vérifiez votre email pour confirmer.";
+      okBox.classList.remove("d-none");
+
+      // Option : rediriger vers /auth/login après quelques secondes
+      // setTimeout(() => window.location.assign('/auth/login'), 1500);
+    } catch {
+      errBox.textContent = "Erreur réseau. Réessayez.";
+      errBox.classList.remove("d-none");
+    }
+  });
+</script>

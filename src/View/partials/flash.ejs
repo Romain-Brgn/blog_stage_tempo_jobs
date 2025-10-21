@@ -1,3 +1,24 @@
-<% if (typeof flash !== 'undefined' && flash?.message) { %>
-<div class="alert alert-<%= flash.type || 'info' %>"><%= flash.message %></div>
+<% var f = (flash && typeof flash === 'object') ? flash : {}; %> <% var type =
+f.type || 'info'; %> <% var errors = Array.isArray(f.errors) ? f.errors : []; %>
+<% var message = (typeof f.message === 'string') ? f.message.trim() : ''; %> <%
+if (message || errors.length) { %>
+<div class="alert alert-<%= type %> alert-dismissible fade show" role="alert">
+  <% if (message) { %>
+  <div><%= message %></div>
+  <% } %> <% if (errors.length) { %>
+  <ul class="mb-0 mt-2">
+    <% for (var i = 0; i < errors.length; i++) { %> <% var e = errors[i]; %>
+    <li>
+      <%= (e && (e.msg || e.message)) ? (e.msg || e.message) : String(e) %>
+    </li>
+    <% } %>
+  </ul>
+  <% } %>
+  <button
+    type="button"
+    class="btn-close"
+    data-bs-dismiss="alert"
+    aria-label="Fermer"
+  ></button>
+</div>
 <% } %>

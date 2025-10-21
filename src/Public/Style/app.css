@@ -1,0 +1,59 @@
+:root {
+  --brand-blue: #305979; /* bleu */
+  --brand-yellow: #f9b233; /* jaune */
+}
+
+/* Fonts locales (place les fichiers dans src/Public/fonts/ et ajuste les noms si besoin) */
+@font-face {
+  font-family: "Magnolia Script";
+  src: url("/fonts/MagnoliaScript.woff2") format("woff2"),
+    url("/fonts/MagnoliaScript.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Geosans Light";
+  src: url("/fonts/GeosansLight.woff2") format("woff2"),
+    url("/fonts/GeosansLight.woff") format("woff");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+body {
+  font-family: "Geosans Light", system-ui, -apple-system, Segoe UI, Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  color: #1d1d1d;
+}
+
+/* Titres stylés */
+.brand-title {
+  font-family: "Magnolia Script", cursive;
+  color: var(--brand-blue);
+}
+
+/* Liens et boutons brand */
+.link-brand {
+  color: var(--brand-blue);
+  text-decoration: none;
+}
+.link-brand:hover {
+  text-decoration: underline;
+}
+
+.btn-brand {
+  background: var(--brand-yellow);
+  border-color: var(--brand-yellow);
+  color: #1d1d1d;
+  font-weight: 600;
+}
+.btn-brand:hover {
+  filter: brightness(0.95);
+  color: var(--brand-yellow);
+}
+
+/* Petites finitions */
+.card {
+  border-radius: 1rem;
+}
